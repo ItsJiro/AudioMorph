@@ -10,6 +10,9 @@ This project takes MP3 files, converts them into videos (with specified backgrou
 - Automatically uploads the videos to YouTube.
 - User-friendly and fully automated workflow.
 
+## Setup
+- Create 3 folders named Songs, Covers & Output in the same directory as `AutoMorph.py` then run AutoMorph.py
+
 ## Requirements
 
 ### System Requirements
