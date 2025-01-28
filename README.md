@@ -1,11 +1,11 @@
 # MP3 to YouTube Video Converter and Uploader
 
-This project takes MP3 files, converts them into videos (with optional images or background visuals), and automatically uploads them to YouTube. It's perfect for sharing audio content, such as podcasts, music, or lectures, directly to your YouTube channel.
+This project takes MP3 files, converts them into videos (with specified background image), and automatically uploads them to YouTube.
 
 ## Features
 
 - Converts MP3 files into videos.
-- Adds a custom image or background visual for the video.
+- Adds a custom image for the video.
 - Supports batch processing of multiple MP3 files.
 - Automatically uploads the videos to YouTube.
 - User-friendly and fully automated workflow.
