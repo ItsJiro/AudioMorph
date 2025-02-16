@@ -54,24 +54,63 @@ def authenticate_youtube():
         logger.error(f"Error during YouTube authentication: {e}")
         traceback.print_exc()
 
-def get_cover_art(mp3_path, cover_folder):
-    """Extract cover art from MP3 metadata or use default image."""
-    try:
-        audio = MP3(mp3_path, ID3=ID3)
-        for tag in audio.tags.values():
-            if isinstance(tag, APIC):
-                cover_art_path = os.path.join(cover_folder, os.path.basename(mp3_path) + '_cover.jpg')
-                with open(cover_art_path, 'wb') as img_file:
-                    img_file.write(tag.data)
-                logger.debug(f"Cover art extracted from MP3: {cover_art_path}")
-                return cover_art_path
-    except Exception as e:
-        logger.error(f"Error extracting cover art: {e}")
-        traceback.print_exc()
+def get_cover_art(audio_path, cover_folder):
+    """Extract cover art for MP3 files or fetch cover for WAV files."""
+    if audio_path.endswith(".mp3"):
+        try:
+            audio = MP3(audio_path, ID3=ID3)
+            for tag in audio.tags.values():
+                if isinstance(tag, APIC):
+                    cover_art_path = os.path.join(cover_folder, os.path.basename(audio_path) + '_cover.jpg')
+                    with open(cover_art_path, 'wb') as img_file:
+                        img_file.write(tag.data)
+                    logger.debug(f"Cover art extracted from MP3: {cover_art_path}")
+                    return cover_art_path
+        except Exception as e:
+            logger.error(f"Error extracting cover art: {e}")
+            traceback.print_exc()
 
-    # Fallback to default cover art if no cover found
+    # Handle WAV files
+    song_name = os.path.splitext(os.path.basename(audio_path))[0]
+    potential_cover = os.path.join(cover_folder, f"{song_name}.jpg")
+
+    # Check if user-provided cover exists
+    if os.path.exists(potential_cover):
+        logger.debug(f"Using user-provided cover art: {potential_cover}")
+        return potential_cover
+
+    # Fetch cover art from iTunes if user-provided cover art isn't found
+    cover_url = fetch_cover_art(song_name)
+    if cover_url:
+        response = requests.get(cover_url, timeout=5)
+        if response.status_code == 200:
+            with open(potential_cover, "wb") as img_file:
+                img_file.write(response.content)
+            logger.debug(f"Downloaded cover art: {potential_cover}")
+            return potential_cover
+
+    # Default cover if no match found
     logger.debug("Using default cover art.")
     return default_cover_path
+
+
+def fetch_cover_art(song_name):
+    """Fetch cover art from iTunes API based on the song name."""
+    try:
+        search_url = f"https://itunes.apple.com/search?term={song_name}&entity=song&limit=1"
+        response = requests.get(search_url, timeout=5)
+
+        if response.status_code == 200:
+            data = response.json()
+            if data["resultCount"] > 0:
+                cover_url = data["results"][0]["artworkUrl100"].replace("100x100", "600x600")  # Get higher quality
+                return cover_url
+    except Exception as e:
+        logger.error(f"Error fetching cover art: {e}")
+        traceback.print_exc()
+    
+    return None
+
 
 def create_video(mp3_path, cover_art_path, output_path):
     """Create a video from MP3 and cover art."""
@@ -115,7 +154,7 @@ def process_and_upload(mp3_folder, cover_folder, output_folder, youtube):
     """Process MP3 files, create videos, and upload to YouTube."""
     try:
         for filename in os.listdir(mp3_folder):
-            if filename.endswith(".mp3"):
+            if filename.endswith((".mp3", ".wav")):
                 mp3_path = os.path.join(mp3_folder, filename)
                 logger.debug(f"Processing MP3: {mp3_path}")
 
