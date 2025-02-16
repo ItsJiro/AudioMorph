@@ -1,4 +1,4 @@
-# MP3 to YouTube Video Converter and Uploader
+# Audio to YouTube Video Converter and Uploader
 
 This project takes MP3/WAV files, converts them into videos (with specified background image), and automatically uploads them to YouTube.
 
